@@ -9,11 +9,15 @@ Description: Simple implementation of a block structure in blockchain
 package main
 
 import (
+	"bytes"
 	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
+	"strconv"
 	"time"
 )
+
+// DIFFICULTY represents difficulty to harvest block
+const DIFFICULTY int32 = 6
 
 // Block Struct
 // Description: Represents a block in the blockchain
@@ -27,35 +31,39 @@ type Block struct {
 type Header struct {
 	Height     int32
 	Timestamp  int64
-	Hash       string
-	ParentHash string
+	Hash       [32]byte
+	ParentHash [32]byte
 	Size       int32
+	Difficulty int32
+	Nonce      [8]byte
 }
 
 // Initial Function
 // Description: This function takes arguments(such as height, parentHash, and value) and forms a block. This is a method of the block struct.
-func (block *Block) Initial(height int32, parentHash string, value string) {
+// Argument: Height of the block, it's parent hash and the value ( transactions )
+func (block *Block) Initial(height int32, parentHash [32]byte, value string) {
 	block.Header = Header{
 		Height:     height,
 		Timestamp:  time.Now().Unix(),
 		ParentHash: parentHash,
 		Size:       32,
+		Difficulty: DIFFICULTY,
 	}
 	block.Value = value
+	// Proof of work ...
+	block.Header.Nonce, _ = Pow(*block)
 	// Getting hash value
-	h := sha256.New()
-	h.Write(
-		[]byte(string(block.Header.Height) +
-			string(block.Header.Timestamp) +
-			string(block.Header.ParentHash) +
-			string(block.Header.Size) +
-			block.Value))
-	block.Header.Hash = hex.EncodeToString(h.Sum(nil))
+	block.Header.Hash = sha256.Sum256(bytes.Join([][]byte{
+		[]byte(strconv.Itoa(int(block.Header.Height))),
+		[]byte(strconv.Itoa(int(block.Header.Timestamp))),
+		block.Header.ParentHash[:],
+		[]byte(strconv.Itoa(int(block.Header.Size))),
+		[]byte(block.Value)},
+		[]byte{}))
 }
 
 // EncodeToJSON Function
 // Description: This function encodes a block instance into a JSON format string.
-// Argument: a block or you may define this as a method of the block struct
 // Return value: a string of JSON format.
 func (block Block) EncodeToJSON() (string, error) {
 	var data []byte

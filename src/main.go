@@ -1,6 +1,8 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func main() {
 
@@ -10,7 +12,7 @@ func main() {
 
 	// Create genesis block
 	genesis := new(Block)
-	genesis.Initial(0, "genesis", "genesis")
+	genesis.Initial(0, [32]byte{}, "genesis")
 
 	// Insert genesis block to the blockchain
 	blockchain.Insert(*genesis)
@@ -51,4 +53,9 @@ func main() {
 	fmt.Println("BLOCKCHAIN 2 JSON")
 	fmt.Println()
 	fmt.Println(json2)
+
+	// Checking mining results
+	fmt.Printf("%-16s %d\n", "Block difficulty:", block1.Header.Difficulty)
+	fmt.Printf("Block %d %-16s %v\n", block1.Header.Height, "nonce valid:", CheckNonce(block1.Header.Nonce, *block1))
+	fmt.Printf("Block %d %-16s %v\n", block2.Header.Height, "nonce valid:", CheckNonce(block2.Header.Nonce, *block2))
 }
