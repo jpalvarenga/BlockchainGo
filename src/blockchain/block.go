@@ -1,16 +1,17 @@
 /*
+Package miner created by Joao Alvarenga
 
 Title: Block Data Structure
-Author: Joao Alvarenga
 
 Description: Simple implementation of a block structure in blockchain
 
 */
-package main
+package miner
 
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"strconv"
 	"time"
@@ -22,26 +23,26 @@ const DIFFICULTY int32 = 6
 // Block Struct
 // Description: Represents a block in the blockchain
 type Block struct {
-	Header Header
-	Value  string
+	Header Header `json:"header"`
+	Value  string `json:"value"`
 }
 
 // Header Struct
 // Description: Represents header in a Block object
 type Header struct {
-	Height     int32
-	Timestamp  int64
-	Hash       [32]byte
-	ParentHash [32]byte
-	Size       int32
-	Difficulty int32
-	Nonce      [8]byte
+	Height     int32  `json:"height"`
+	Timestamp  int64  `json:"timestamp"`
+	Hash       string `json:"hash"`
+	ParentHash string `json:"parenthash"`
+	Size       int32  `json:"size"`
+	Difficulty int32  `json:"difficulty"`
+	Nonce      string `json:"nonce"`
 }
 
 // Initial Function
 // Description: This function takes arguments(such as height, parentHash, and value) and forms a block. This is a method of the block struct.
 // Argument: Height of the block, it's parent hash and the value ( transactions )
-func (block *Block) Initial(height int32, parentHash [32]byte, value string) {
+func (block *Block) Initial(height int32, parentHash string, value string) {
 	block.Header = Header{
 		Height:     height,
 		Timestamp:  time.Now().Unix(),
@@ -51,15 +52,17 @@ func (block *Block) Initial(height int32, parentHash [32]byte, value string) {
 	}
 	block.Value = value
 	// Proof of work ...
-	block.Header.Nonce, _ = Pow(*block)
+	nonce, _ := Pow(*block)
+	block.Header.Nonce = hex.EncodeToString(nonce[:])
 	// Getting hash value
-	block.Header.Hash = sha256.Sum256(bytes.Join([][]byte{
+	hash := sha256.Sum256(bytes.Join([][]byte{
 		[]byte(strconv.Itoa(int(block.Header.Height))),
 		[]byte(strconv.Itoa(int(block.Header.Timestamp))),
-		block.Header.ParentHash[:],
+		[]byte(block.Header.ParentHash),
 		[]byte(strconv.Itoa(int(block.Header.Size))),
 		[]byte(block.Value)},
 		[]byte{}))
+	block.Header.Hash = hex.EncodeToString(hash[:])
 }
 
 // EncodeToJSON Function

@@ -1,0 +1,38 @@
+[
+  {
+    "header": {
+      "height": 0,
+      "timestamp": 1575171857,
+      "hash": "201176e2b58a005e3925315011e40a3cdf49afff5a0459d2f9db92ab79e084f0",
+      "parenthash": "genesis",
+      "size": 32,
+      "difficulty": 6,
+      "nonce": "1fc24a21d8376eb1"
+    },
+    "value": "genesis"
+  },
+  {
+    "header": {
+      "height": 1,
+      "timestamp": 1575171860,
+      "hash": "7d1922155e6724f00c10fb3e5aa836480a1593136e90c635424b4527e862b082",
+      "parenthash": "201176e2b58a005e3925315011e40a3cdf49afff5a0459d2f9db92ab79e084f0",
+      "size": 32,
+      "difficulty": 6,
+      "nonce": "72879827ab97977d"
+    },
+    "value": "1BTC"
+  },
+  {
+    "header": {
+      "height": 2,
+      "timestamp": 1575171876,
+      "hash": "717556cdf76c619dde772cc2ce003278bc1582d0f2a2dfd259d759f4f4407f18",
+      "parenthash": "7d1922155e6724f00c10fb3e5aa836480a1593136e90c635424b4527e862b082",
+      "size": 32,
+      "difficulty": 6,
+      "nonce": "648d39ec972e587d"
+    },
+    "value": "2BTC"
+  }
+]

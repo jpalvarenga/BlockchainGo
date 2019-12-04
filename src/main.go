@@ -2,60 +2,80 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+
+	miner "./blockchain"
+	helper "./helper"
 )
+
+// The current blockchain
+var blockchain = miner.Blockchain{Chain: make(map[int32][]miner.Block), Length: 0}
+
+// A queue holding the blocks needed to be processed
+var queue = SyncBlockDataQueue{queue: []helper.BlockData{}}
 
 func main() {
 
-	// Create blockchain
-	blockchain := new(Blockchain)
-	blockchain.Initial()
+	go func() {
+		i := 0
+		for {
+			if len(queue.queue) > 0 {
+				fmt.Println(queue.Get())
+			}
+			if i%1400234240 == 0 {
+				fmt.Println("Im alive")
+				fmt.Println(queue.queue)
+			}
+			i++
+		}
+	}()
 
-	// Create genesis block
-	genesis := new(Block)
-	genesis.Initial(0, [32]byte{}, "genesis")
+	// Create queue that will hold all blocks yet to process
 
-	// Insert genesis block to the blockchain
-	blockchain.Insert(*genesis)
+	// json, _ := ioutil.ReadFile("./json/blockchain.json")
 
-	// Create and insert first block
-	block1 := new(Block)
-	block1.Initial(1, blockchain.Chain[blockchain.Length-1][0].Header.Hash, "1BTC")
+	// blockchain.DecodeFromJSON(string(json))
 
-	blockchain.Insert(*block1)
+	// value, _ := blockchain.EncodeToJSON()
+	// fmt.Println(value)
+	// fmt.Println(blockchain.Length)
 
-	// Create and insert second block
-	block2 := new(Block)
-	block2.Initial(2, blockchain.Chain[blockchain.Length-1][0].Header.Hash, "2BTC")
+	// if err == nil {
+	// 	blockchain.DecodeFromJSON(string(json))
+	// } else {
+	// 	// request blockchain from users
+	// }
 
-	blockchain.Insert(*block2)
+	// f, _ := os.Create("./json/blockchain.json")
 
-	// Get Json Representation of blockchain
-	json, _ := blockchain.EncodeToJSON()
+	// blockchain2 := new(miner.Blockchain)
+	// blockchain2.Initial()
 
-	// Print Blockchain 1
-	fmt.Println()
-	fmt.Println("BLOCKCHAIN 1 JSON")
-	fmt.Println()
-	fmt.Println(json)
+	// // Create genesis block
+	// genesis := new(miner.Block)
+	// genesis.Initial(0, "genesis", "genesis")
 
-	// Create second blockchain
-	blockchain2 := new(Blockchain)
-	blockchain2.Initial()
+	// // Insert genesis block to the blockchain
+	// blockchain2.Insert(*genesis)
 
-	// Insert all blocks from JSON to blockchain
-	blockchain2.DecodeFromJSON(json)
+	// // Create and insert first block
+	// block1 := new(miner.Block)
+	// block1.Initial(1, blockchain.Chain[blockchain.Length-1][0].Header.Hash, "1BTC")
 
-	// Get Json Representation of blockchain 2
-	json2, _ := blockchain.EncodeToJSON()
+	// blockchain.Insert(*block1)
 
-	// Print Blockchain 2
-	fmt.Println()
-	fmt.Println("BLOCKCHAIN 2 JSON")
-	fmt.Println()
-	fmt.Println(json2)
+	// // Create and insert second block
+	// block2 := new(miner.Block)
+	// block2.Initial(2, blockchain.Chain[blockchain.Length-1][0].Header.Hash, "2BTC")
 
-	// Checking mining results
-	fmt.Printf("%-16s %d\n", "Block difficulty:", block1.Header.Difficulty)
-	fmt.Printf("Block %d %-16s %v\n", block1.Header.Height, "nonce valid:", CheckNonce(block1.Header.Nonce, *block1))
-	fmt.Printf("Block %d %-16s %v\n", block2.Header.Height, "nonce valid:", CheckNonce(block2.Header.Nonce, *block2))
+	// blockchain.Insert(*block2)
+
+	// a, _ := blockchain.EncodeToJSON()
+	// f.WriteString(a)
+
+	// _ = f.Close()
+
+	router := InitRouter()
+	log.Fatal(http.ListenAndServe(":8080", router))
 }

@@ -1,16 +1,17 @@
 /*
+Package miner created by Joao Alvarenga
 
 Title: Blockchain Data Structure
-Author: Joao Alvarenga
 
 Description: Simple implementation of a blockchain data structure in Golang
 
 */
-package main
+package miner
 
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 )
 
 // Blockchain Struct
@@ -52,16 +53,30 @@ func (blockchain *Blockchain) Insert(block Block) error {
 	return nil
 }
 
-// Get Function
+// GetLatestBlocks Function
 // Description: This function takes a height as the argument, returns the list of blocks stored in that height or None if the height doesn't exist.
 // Argument: int32
 // Return type: []Block
-func (blockchain Blockchain) Get(height int32) ([]Block, error) {
+func (blockchain Blockchain) GetLatestBlocks(height int32) ([]Block, error) {
 	if blockchain.Length >= height {
 		return blockchain.Chain[height], nil
 	}
 	err := errors.New("empty height level in blockchain")
 	return nil, err
+}
+
+// GetParentBlock Function
+// Description: This function takes a height as the argument, returns the list of blocks stored in that height or None if the height doesn't exist.
+// Argument: int32
+// Return type: []Block
+func (blockchain Blockchain) GetParentBlock(block Block) (*Block, error) {
+	parentHeight := block.Header.Height - 1
+	for _, b := range blockchain.Chain[parentHeight] {
+		if block.Header.ParentHash == b.Header.Hash {
+			return &b, nil
+		}
+	}
+	return nil, errors.New("parent not found")
 }
 
 // EncodeToJSON Function
@@ -75,6 +90,7 @@ func (blockchain Blockchain) EncodeToJSON() (string, error) {
 	// Add all blocks to list
 	for index := 0; index < int(blockchain.Length); index++ {
 		chain = append(chain, blockchain.Chain[int32(index)][0])
+		fmt.Println("hello")
 	}
 
 	//Encode list to JSON
@@ -86,7 +102,7 @@ func (blockchain Blockchain) EncodeToJSON() (string, error) {
 // DecodeFromJSON Function
 // Description: This function is called upon a blockchain instance. It takes a blockchain JSON string as input, decodes the JSON string back to a list of block JSON strings, decodes each block JSON string back to a block instance, and inserts every block into the blockchain.
 // Argument: self, string
-func (blockchain Blockchain) DecodeFromJSON(data string) (Blockchain, error) {
+func (blockchain *Blockchain) DecodeFromJSON(data string) (*Blockchain, error) {
 
 	// Turn JSON into list
 	chain := new([]Block)
