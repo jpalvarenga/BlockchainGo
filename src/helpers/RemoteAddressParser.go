@@ -35,27 +35,3 @@ func ParseRemoteAddress(s string) (string, string, error) {
 	}
 	return ip, port, err
 }
-
-// func FindIP(s string) (string, bool) {
-// 	s = strings.Trim(s, " ")
-
-// 	re, _ := regexp.Compile(ipRegex)
-// 	if re.MatchString(s) {
-// 		s = string(re.Find([]byte(s)))
-// 		s = strings.Trim(, "]:")
-// 		return s, true
-// 	}
-// 	return "", false
-// }
-
-// func FindPort(s string) (string, bool) {
-// 	s = strings.Trim(s, " ")
-
-// 	re, _ := regexp.Compile(portRegex)
-// 	if re.MatchString(s) {
-// 		s = string(re.Find([]byte(s)))
-// 		s = strings.Trim(s, "]:")
-// 		return s, true
-// 	}
-// 	return "", false
-// }
