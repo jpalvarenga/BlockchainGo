@@ -1,12 +1,12 @@
 /*
-Package miner created by Joao Alvarenga
+Package blockchain created by Joao Alvarenga
 
 Title: Block Data Structure
 
 Description: Simple implementation of a block structure in blockchain
 
 */
-package miner
+package blockchain
 
 import (
 	"bytes"
@@ -49,11 +49,9 @@ func (block *Block) Initial(height int32, parentHash string, value string) {
 		ParentHash: parentHash,
 		Size:       32,
 		Difficulty: DIFFICULTY,
+		Nonce:      "",
 	}
 	block.Value = value
-	// Proof of work ...
-	nonce, _ := Pow(*block)
-	block.Header.Nonce = hex.EncodeToString(nonce[:])
 	// Getting hash value
 	hash := sha256.Sum256(bytes.Join([][]byte{
 		[]byte(strconv.Itoa(int(block.Header.Height))),
@@ -78,8 +76,7 @@ func (block Block) EncodeToJSON() (string, error) {
 // Description: This function takes a string that represents the JSON value of a block as an input, and decodes the input string back to a block instance.
 // Argument: a string of JSON format
 // Return value: a block instance
-func (block Block) DecodeFromJSON(data string) (Block, error) {
-	var b *Block
-	err := json.Unmarshal([]byte(data), b)
-	return *b, err
+func (block *Block) DecodeFromJSON(data string) error {
+	err := json.Unmarshal([]byte(data), block)
+	return err
 }

@@ -1,12 +1,12 @@
 /*
-Package miner created by Joao Alvarenga
+Package blockchain created by Joao Alvarenga
 
 Title: Blockchain Data Structure
 
 Description: Simple implementation of a blockchain data structure in Golang
 
 */
-package miner
+package blockchain
 
 import (
 	"encoding/json"
@@ -69,14 +69,14 @@ func (blockchain Blockchain) GetLatestBlocks(height int32) ([]Block, error) {
 // Description: This function takes a height as the argument, returns the list of blocks stored in that height or None if the height doesn't exist.
 // Argument: int32
 // Return type: []Block
-func (blockchain Blockchain) GetParentBlock(block Block) (*Block, error) {
+func (blockchain Blockchain) GetParentBlock(block Block) *Block {
 	parentHeight := block.Header.Height - 1
 	for _, b := range blockchain.Chain[parentHeight] {
 		if block.Header.ParentHash == b.Header.Hash {
-			return &b, nil
+			return &b
 		}
 	}
-	return nil, errors.New("parent not found")
+	return nil
 }
 
 // EncodeToJSON Function
@@ -102,7 +102,7 @@ func (blockchain Blockchain) EncodeToJSON() (string, error) {
 // DecodeFromJSON Function
 // Description: This function is called upon a blockchain instance. It takes a blockchain JSON string as input, decodes the JSON string back to a list of block JSON strings, decodes each block JSON string back to a block instance, and inserts every block into the blockchain.
 // Argument: self, string
-func (blockchain *Blockchain) DecodeFromJSON(data string) (*Blockchain, error) {
+func (blockchain *Blockchain) DecodeFromJSON(data string) error {
 
 	// Turn JSON into list
 	chain := new([]Block)
@@ -113,5 +113,5 @@ func (blockchain *Blockchain) DecodeFromJSON(data string) (*Blockchain, error) {
 		blockchain.Insert(block)
 	}
 
-	return blockchain, err
+	return err
 }

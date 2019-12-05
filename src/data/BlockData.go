@@ -3,13 +3,13 @@ package data
 import (
 	"encoding/json"
 
-	miner "../blockchain"
+	blockchain "../blockchain"
 )
 
 // BlockData ...
 type BlockData struct {
-	Peer  Peer        `json:"peer"`
-	Block miner.Block `json:"block"`
+	Peer  Peer             `json:"peer"`
+	Block blockchain.Block `json:"block"`
 }
 
 // DecodeFromJSON ...

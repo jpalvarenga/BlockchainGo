@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Route struct represents a route
 type Route struct {
 	Name        string
 	Method      string
@@ -13,6 +14,7 @@ type Route struct {
 	HandlerFunc http.HandlerFunc
 }
 
+// InitRouter initializes mux routers in routes
 func InitRouter() *mux.Router {
 
 	router := mux.NewRouter().StrictSlash(true)
