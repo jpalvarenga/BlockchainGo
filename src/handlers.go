@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/hex"
 	"encoding/json"
+	"errors"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -17,45 +19,31 @@ import (
 
 // Start function starts the server
 func Start(w http.ResponseWriter, r *http.Request) {
-	block := blockchain.Block{
-		Header: blockchain.Header{
-			Height:     1,
-			Timestamp:  1575171860,
-			Hash:       "7d1922155e6724f00c10fb3e5aa836480a1593136e90c635424b4527e862b082",
-			ParentHash: "201176e2b58a005e3925315011e40a3cdf49afff5a0459d2f9db92ab79e084f0",
-			Size:       32,
-			Difficulty: 6,
-			Nonce:      "72879827ab97977d",
-		},
-		Value: "1BTC",
-	}
-	miner.RequestParentBlock(block, data.Peer{
-		ID:   "localhost:8080",
-		IP:   "localhost",
-		Port: "8080",
-	})
-
-	http.Get("http://localhost:8080/upload")
-
+	// Todo
 }
 
-// UploadBlockchain function returns the entire blockchain
+// UploadBlockchain function
+// Endpoint: /upload
+// Purpose: Get the blockchain from peer
 func UploadBlockchain(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(bc); err != nil {
-		panic(err)
+	if json, err := bc.EncodeToJSON(); err == nil {
+		w.Write([]byte(json))
 	}
 }
 
-// UploadBlock function returns a block
+// UploadBlock function
+// Endpoint: /block/{height}/{hash}
+// Purpose: Get a specific block from peer
 func UploadBlock(w http.ResponseWriter, r *http.Request) {
+	// set header
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-
+	// variables
 	height := mux.Vars(r)["height"]
 	hash := mux.Vars(r)["hash"]
 
-	// Tries to convert height to a number
+	// get blocks from certain height with specific hash
 	if h, err := strconv.Atoi(height); err == nil {
 		if blocks, err := bc.GetLatestBlocks(int32(h)); err == nil {
 			for _, block := range blocks {
@@ -64,54 +52,57 @@ func UploadBlock(w http.ResponseWriter, r *http.Request) {
 					json.NewEncoder(w).Encode(block)
 				}
 			}
-		} else {
-			w.WriteHeader(http.StatusNoContent)
 		}
-	} else {
-		w.WriteHeader(http.StatusBadRequest)
 	}
 }
 
 // ReceiveBlock func
 func ReceiveBlock(w http.ResponseWriter, r *http.Request) {
-
+	// blockdata
 	blockdata := new(data.BlockData)
 
-	if body, er := ioutil.ReadAll(r.Body); er == nil {
-		if er = json.Unmarshal(body, blockdata); er == nil {
-
-			var block = blockdata.Block
-			//var parent *blockchain.Block = nil
-
-			// loop until find parent in the blockchain
-			if bc.GetParentBlock(block) == nil {
-				miner.RequestParentBlock(block, blockdata.Peer)
-			}
-
-			if block.Header.Nonce == "" {
-				nonce, _ := miner.Pow(block)
-				block.Header.Nonce = hex.EncodeToString(nonce[:])
-			}
-			if miner.CheckNonce(block.Header.Nonce, block) {
-				miner.Broadcast(block, peers)
+	var err error
+	if err = ParseRequest(r.Body, blockdata); err == nil {
+		// if parent block is not in the blockchain request all the parent blocks to the miner
+		if bc.GetParentBlock(blockdata.Block) == nil {
+			if err = GetAllParentBlocks(blockdata.Block, blockdata.Peer); err == nil {
+				// if all the parent blocks have been added
+				if blockdata.Block.Header.Nonce == "" {
+					nonce, _ := miner.Pow(blockdata.Block)
+					blockdata.Block.Header.Nonce = hex.EncodeToString(nonce[:])
+					bc.Insert(blockdata.Block)
+					miner.Broadcast(*blockdata, peers)
+				} else {
+					if miner.CheckNonce(blockdata.Block.Header.Nonce, blockdata.Block) {
+						miner.Broadcast(*blockdata, peers)
+					}
+				}
 			}
 		}
 	}
+}
 
-	// Pass read body
-	var e error
-	if body, e := ioutil.ReadAll(r.Body); e == nil {
-		// Pass JSON decode
-		if e := blockdata.DecodeFromJSON(string(body)); e == nil {
-			//fmt.Println(queue.queue, "Im here 3")
-			w.WriteHeader(http.StatusOK)
+// GetAllParentBlocks func
+func GetAllParentBlocks(block blockchain.Block, peer data.Peer) error {
+	// parents to be added to current blockchain
+	var parents = []blockchain.Block{}
+	var b blockchain.Block = block
+	var err error
+	for bc.GetParentBlock(b) == nil {
+		if b, err = miner.RequestParentBlock(block, peer); err == nil {
+			parents = append(parents, b)
+		} else {
+			return err
 		}
 	}
-
-	// If error exists show bad request
-	if e != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	for index := len(parents) - 1; index > 0; index-- {
+		if miner.CheckNonce(parents[index].Header.Nonce, parents[index]) {
+			bc.Insert(parents[index])
+		} else {
+			return errors.New("invalid nonce")
+		}
 	}
+	return err
 }
 
 // RegisterPeer function
@@ -135,4 +126,13 @@ func RegisterPeer(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 	// TODO: Broadcast Peer
+}
+
+// ParseRequest func
+func ParseRequest(r io.Reader, v interface{}) error {
+	var er error
+	if body, er := ioutil.ReadAll(r); er == nil {
+		er = json.Unmarshal(body, v)
+	}
+	return er
 }

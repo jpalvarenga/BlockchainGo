@@ -12,7 +12,12 @@ import (
 )
 
 // The current blockchain
-var bc = blockchain.Blockchain{Chain: make(map[int32][]blockchain.Block), Length: 0}
+var bc = blockchain.SyncBlockchain{
+	BC: blockchain.Blockchain{
+		Chain:  make(map[int32][]blockchain.Block),
+		Length: 0,
+	},
+}
 
 var peers = data.Peers{}
 
@@ -28,6 +33,11 @@ func main() {
 		fmt.Println(error)
 	}
 
-	router := InitRouter()
-	log.Fatal(http.ListenAndServe(":8080", router))
+	go func() {
+		router := InitRouter()
+		log.Fatal(http.ListenAndServe(":8080", router))
+	}()
+
+	router2 := InitRouter()
+	log.Fatal(http.ListenAndServe(":3030", router2))
 }
