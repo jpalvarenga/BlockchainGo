@@ -1,4 +1,4 @@
-package helper
+package data
 
 // Peer represents a node in the network
 type Peer struct {

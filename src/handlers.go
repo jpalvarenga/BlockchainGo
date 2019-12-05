@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"strconv"
 
-	helper "./helper"
+	data "./data"
+	helpers "./helpers"
 
 	"github.com/gorilla/mux"
 )
 
 // Start function starts the server
 func Start(w http.ResponseWriter, r *http.Request) {
-
 }
 
 // UploadBlockchain function returns the entire blockchain
@@ -52,7 +52,7 @@ func UploadBlock(w http.ResponseWriter, r *http.Request) {
 // ReceiveBlock func
 func ReceiveBlock(w http.ResponseWriter, r *http.Request) {
 
-	var blockdata helper.BlockData
+	var blockdata data.BlockData
 
 	// Pass read body
 	var e error
@@ -72,5 +72,20 @@ func ReceiveBlock(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// RegisterPeer func
 func RegisterPeer(w http.ResponseWriter, r *http.Request) {
+	// find ip adress and port
+	if ip, port, er := helpers.ParseRemoteAddress(r.RemoteAddr); er == nil {
+		// append new peer to peer list
+		peers = append(peers, data.Peer{
+			IP:   ip,
+			Port: port,
+		})
+		// good request
+		w.WriteHeader(http.StatusOK)
+		// return id
+		w.Write([]byte(string(ip + ":" + port)))
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+	}
 }

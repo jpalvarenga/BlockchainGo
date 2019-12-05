@@ -59,7 +59,7 @@ var routes = []Route{
 	},
 	Route{
 		"RegisterPeer",
-		"PUT",
+		"GET",
 		"/peer",
 		RegisterPeer,
 	},
